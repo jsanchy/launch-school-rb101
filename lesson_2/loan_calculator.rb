@@ -45,7 +45,7 @@ def loan_calculator
 
   m = p * (j / (1 - (1 + j)**(-n)))
 
-  puts MESSAGES['monthly_payment'] + m.to_s
+  puts MESSAGES['monthly_payment'] + format('%02.2f', m)
 end
 
 puts MESSAGES['welcome']
