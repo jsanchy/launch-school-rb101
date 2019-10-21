@@ -1,0 +1,8 @@
+welcome:         "Welcome to the loan calculator!"
+invalid_input:   "Invalid input. Try again."
+loan_amount:     "Enter loan amount:"
+apr:             "Enter APR in decimal (Ex: .05 for 5%):"
+loan_duration:   "Enter loan duration in years:"
+monthly_payment: "Monthly payment: "
+another_loan:    "Calculate another loan?"
+goodbye:         "Thank you for using the loan calculator!"
