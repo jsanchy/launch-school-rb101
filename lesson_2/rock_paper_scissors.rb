@@ -31,9 +31,10 @@ def prompt(message)
 end
 
 def display_results(player, computer)
-  if OUTCOMES[player][computer] == 'win'
+  player_outcome = OUTCOMES[player][computer]
+  if player_outcome == 'win'
     prompt("You won!")
-  elsif OUTCOMES[player][computer] == 'lose'
+  elsif player_outcome == 'lose'
     prompt("Computer won!")
   else
     prompt("It's a tie!")
