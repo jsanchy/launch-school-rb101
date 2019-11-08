@@ -9,6 +9,7 @@ WINNING_LINES = [[1, 2, 3], [4, 5, 6], [7, 8, 9]] + # rows
 INITIAL_MARKER = ' '
 PLAYER_MARKER = 'X'
 COMPUTER_MARKER = 'O'
+FIRST_TO_GO = 'choose'
 
 def prompt(msg)
   puts "=> #{msg}"
@@ -51,12 +52,32 @@ def joinor(arr, separator = ', ', joining_word = 'or')
   when 1
     arr[0]
   when 2
-    arr.join(' #{joining_word} ')
+    arr.join(" #{joining_word} ")
   else
     last = arr.pop
     joined = arr.join(separator)
     joined << "#{separator}#{joining_word} #{last}"
   end
+end
+
+def first_player
+  case FIRST_TO_GO
+  when 'player' then return 'p'
+  when 'computer' then return 'c'
+  else
+    first = ''
+    loop do
+      prompt 'Who goes first, player or computer? (p or c)'
+      first = gets.chr.downcase
+      break if %(p c).include?(first)
+      prompt "Sorry, that's not a valid choice"
+    end
+    return first
+  end
+end
+
+def alternate_player(current)
+  current == 'p' ? 'c' : 'p'
 end
 
 def player_places_piece!(brd)
@@ -70,29 +91,46 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
-def must_block?(squares)
-  squares.count(PLAYER_MARKER) == 2 &&
+def at_risk?(squares, marker)
+  squares.count(marker) == 2 &&
   squares.count(INITIAL_MARKER) == 1
 end
 
-def find_at_risk_square(line, brd)
+def find_at_risk_square(line, brd, marker)
   squares_in_line = brd.values_at(*line)
-  if must_block?(squares_in_line)
+  if at_risk?(squares_in_line, marker)
     # index of the at risk square in the current line
     idx = squares_in_line.index(INITIAL_MARKER)
-    line.at(idx)
     line.at(idx)
   end
 end
 
 def computer_places_piece!(brd)
   square = nil
+  # First, win if able
   WINNING_LINES.each do |line|
-    square = find_at_risk_square(line, brd)
+    square = find_at_risk_square(line, brd, COMPUTER_MARKER)
     break if square
   end
+  # If unable to win, block if needed
+  if !square
+    WINNING_LINES.each do |line|
+      square = find_at_risk_square(line, brd, PLAYER_MARKER)
+      break if square
+    end
+  end
+  # If no win or block, pick square #5 if available
+  square = 5 if empty_squares(brd).include?(5)
   square = square ? square : empty_squares(brd).sample
   brd[square] = COMPUTER_MARKER
+end
+
+def places_piece!(brd, placer)
+  if placer == 'p'
+    player_places_piece!(brd)
+  else
+    computer_places_piece!(brd)
+  end
 end
 
 def board_full?(brd)
@@ -119,14 +157,12 @@ loop do
   computer_score = 0
   loop do
     board = initialize_board
-
+    
+    current_player = first_player
     loop do
       display_board(board)
-
-      player_places_piece!(board)
-      break if someone_won?(board) || board_full?(board)
-
-      computer_places_piece!(board)
+      places_piece!(board, current_player)
+      current_player = alternate_player(current_player)
       break if someone_won?(board) || board_full?(board)
     end
 
