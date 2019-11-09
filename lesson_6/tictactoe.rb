@@ -62,8 +62,8 @@ end
 
 def first_player
   case FIRST_TO_GO
-  when 'player' then return 'p'
-  when 'computer' then return 'c'
+  when 'player' then 'p'
+  when 'computer' then 'c'
   else
     first = ''
     loop do
@@ -72,7 +72,7 @@ def first_player
       break if %(p c).include?(first)
       prompt "Sorry, that's not a valid choice"
     end
-    return first
+    first
   end
 end
 
@@ -91,39 +91,77 @@ def player_places_piece!(brd)
   brd[square] = PLAYER_MARKER
 end
 
-def at_risk?(squares, marker)
-  squares.count(marker) == 2 &&
-  squares.count(INITIAL_MARKER) == 1
+def this_many?(markers, marker, marker_count)
+  markers.count(marker) == marker_count &&
+    markers.count(INITIAL_MARKER) == 3 - marker_count
 end
 
-def find_at_risk_square(line, brd, marker)
-  squares_in_line = brd.values_at(*line)
-  if at_risk?(squares_in_line, marker)
-    # index of the at risk square in the current line
-    idx = squares_in_line.index(INITIAL_MARKER)
-    line.at(idx)
+def search_line(line, brd, marker)
+  markers_in_line = brd.values_at(*line)
+  if this_many?(markers_in_line, marker, 2)
+    line.find { |square| brd[square] == INITIAL_MARKER }
   end
 end
 
-def computer_places_piece!(brd)
-  square = nil
-  # First, win if able
+def find_at_risk_square(brd, marker)
+  at_risk_squares = []
   WINNING_LINES.each do |line|
-    square = find_at_risk_square(line, brd, COMPUTER_MARKER)
-    break if square
+    square = search_line(line, brd, marker)
+    at_risk_squares << square if square
   end
-  # If unable to win, block if needed
-  if !square
-    WINNING_LINES.each do |line|
-      square = find_at_risk_square(line, brd, PLAYER_MARKER)
-      break if square
+  at_risk_squares.sample
+end
+
+def find_lines_with_one(brd, marker)
+  WINNING_LINES.select do |line|
+    markers_in_line = brd.values_at(*line)
+    this_many?(markers_in_line, marker, 1)
+  end
+end
+
+def count_occurrences(brd, arr, marker)
+  arr = arr.select { |square| brd[square] == marker }
+  arr.each_with_object({}) do |value, hsh|
+    if hsh[value]
+      hsh[value] += 1
+    else
+      hsh[value] = 1
     end
   end
+end
+
+def find_double_threat_squares(brd, marker)
+  lines = find_lines_with_one(brd, marker).flatten
+  square_count = count_occurrences(brd, lines, INITIAL_MARKER)
+  square_count.keys.select { |key| square_count[key] > 1 }
+end
+
+def prevent_double_threats(brd, threats)
+  return threats.sample if threats.size == 1
+  return empty_squares(brd).select(&:even?).sample if brd[5] == COMPUTER_MARKER
+  empty_squares(brd).select(&:odd?).sample if brd[5] == PLAYER_MARKER
+end
+
+# rubocop:disable Metrics/AbcSize
+def computer_places_piece!(brd)
+  # First, win if able
+  square = find_at_risk_square(brd, COMPUTER_MARKER)
+  # If unable to win, block if needed
+  square ||= find_at_risk_square(brd, PLAYER_MARKER)
   # If no win or block, pick square #5 if available
   square = 5 if empty_squares(brd).include?(5)
-  square = square ? square : empty_squares(brd).sample
+  # If square #5 not availabe, make double threat if possible
+  double_threats = find_double_threat_squares(brd, COMPUTER_MARKER)
+  square ||= double_threats.sample
+  # If can't make double threat, ensure player can't
+  double_threats = find_double_threat_squares(brd, PLAYER_MARKER)
+  square ||= prevent_double_threats(brd, double_threats)
+  # Otherwise, pick a random square, prioritizing corner squares
+  square ||= empty_squares(brd).select(&:odd?).sample
+  square ||= empty_squares(brd).sample
   brd[square] = COMPUTER_MARKER
 end
+# rubocop:enable Metrics/AbcSize
 
 def places_piece!(brd, placer)
   if placer == 'p'
@@ -157,7 +195,6 @@ loop do
   computer_score = 0
   loop do
     board = initialize_board
-    
     current_player = first_player
     loop do
       display_board(board)
