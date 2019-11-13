@@ -224,9 +224,9 @@ def player_turn!(deck, players, current_player, dealer)
   prompt "#{current_player[:name]}'s turn!"
   display_hands(players, dealer)
 
-  final_choice = play_until_done(deck, players, current_player, dealer)
+  player_stayed = stays?(deck, players, current_player, dealer)
 
-  if final_choice == 's'
+  if player_stayed
     clear_and_pad_screen
     prompt "#{current_player[:name]} chose to stay!"
   else
@@ -247,7 +247,7 @@ def dealer_turn!(deck, dealer)
   end
 end
 
-def play_until_done(deck, players, current_player, dealer)
+def stays?(deck, players, current_player, dealer)
   answer = nil
   loop do
     answer = hit_or_stay(current_player[:name])
@@ -258,7 +258,7 @@ def play_until_done(deck, players, current_player, dealer)
     display_hands(players, dealer)
     break if current_player[:busted]
   end
-  answer
+  answer == 's'
 end
 
 def match_over?(players)
