@@ -91,7 +91,7 @@ def hand_to_string(hand)
 end
 
 def clear_and_pad_screen
-  system 'clear'
+  (system 'clear') || (system 'cls')
   puts "\n"
 end
 
