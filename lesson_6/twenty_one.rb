@@ -131,14 +131,10 @@ def validate(message, error_message, valid_options)
   loop do
     prompt message
     answer = gets.chomp.downcase
-    break if valid_input?(valid_options, answer)
+    break if valid_options.include?(answer)
     prompt error_message
   end
   answer
-end
-
-def valid_input?(valid_options, input)
-  valid_options.include?(input)
 end
 
 def initialize_deck!(deck)
@@ -263,7 +259,7 @@ end
 
 def match_over?(players)
   players.any? do |player|
-    player[:match_score] == 5
+    player[:match_score] == MATCH_WIN_SCORE
   end
 end
 
