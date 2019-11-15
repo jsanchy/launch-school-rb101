@@ -1,6 +1,4 @@
-# rubocop:disable Style/EndOfLine
-SUITS = %w(C D H S)
-# rubocop:enable Style/EndOfLine
+SUITS = %w(♣ ♦ ♥ ♠)
 VALUES = %w(A K Q J) + (2..10).to_a.map(&:to_s)
 MAX_TOTAL = 21
 STAY_THRESHOLD = MAX_TOTAL - 4
@@ -72,7 +70,7 @@ def display_dealer(dealer, reveal_card = false)
     display_player(dealer)
   else
     visible_dealer_hand = dealer[:hand].slice(1, dealer[:hand].size - 1)
-    prompt "Dealer hand: ? of ? , #{hand_to_string(visible_dealer_hand)}"
+    prompt "Dealer hand: ?? , #{hand_to_string(visible_dealer_hand)}"
   end
 end
 
@@ -85,7 +83,7 @@ end
 
 def hand_to_string(hand)
   hand = hand.map do |card|
-    "#{card[1]} of #{card[0]}"
+    "#{card[1]}#{card[0]}"
   end
   hand.join(' , ')
 end
